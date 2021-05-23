@@ -44,7 +44,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/temp/start/end"
+       f"/api/v1.0/temp/start/end<br />"
+        
     )
 
 
@@ -92,5 +93,34 @@ def tobs():
 
     return jsonify(all_tobs)
 
+
+@app.route("/api/v1.0/temp/<start>")
+@app.route("/api/v1.0/temp/start/end")
+def calc_temps(start, end):
+    """TMIN, TAVG, and TMAX for a list of dates.
+    Args:
+        start_date (string): A date string in the format %Y-%m-%d
+        end_date (string): A date string in the format %Y-%m-%d
+        
+    Returns:
+        TMIN, TAVE, and TMAX
+    """
+
+    if end != "":
+        temp_stats = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), \
+            func.max(Measurement.tobs)).filter(Measurement.date.between(year_from_last, last_data_point)).all()
+        t_stats = list(np.ravel(temp_stats))
+        return jsonify(temp_stats)
+
+    else:
+        temp_stats = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), \
+            func.max(Measurement.tobs)).filter(Measurement.date > last_data_point).all()
+        t_stats = list(np.ravel(temp_stats))
+        return jsonify(temp_stats)
+
+    return jsonify(all_tobs)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+
